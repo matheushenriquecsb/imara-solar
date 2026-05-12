@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MailClassify - Classificação de Email com IA</title>
+  <meta name="description" content="Aplicação de classificação automática de emails usando inteligência artificial" />
+  <link rel="icon" href="/favicon.ico" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: hsl(220, 20%, 97%);
+      --fg: hsl(220, 25%, 10%);
+      --card: hsl(0, 0%, 100%);
+      --border: hsl(220, 15%, 90%);
+      --primary: hsl(220, 70%, 50%);
+      --primary-fg: hsl(0, 0%, 100%);
+      --primary-10: hsla(220, 70%, 50%, 0.1);
+      --primary-5: hsla(220, 70%, 50%, 0.05);
+      --muted: hsl(220, 15%, 94%);
+      --muted-fg: hsl(220, 10%, 50%);
+      --accent: hsl(220, 15%, 92%);
+      --productive: hsl(142, 60%, 40%);
+      --productive-light: hsl(142, 50%, 95%);
+      --productive-text: hsl(142, 60%, 25%);
+      --unproductive: hsl(35, 90%, 55%);
+      --unproductive-light: hsl(35, 80%, 95%);
+      --unproductive-text: hsl(35, 80%, 30%);
+      --radius: 0.75rem;
+      --shadow-sm: 0 1px 2px hsla(220, 25%, 10%, 0.05);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Layout ── */
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 250px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-fg);
+      font-size: 16px;
+    }
+
+    .sidebar-brand h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar-brand p {
+      font-size: 11px;
+      color: var(--muted-fg);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted-fg);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .sidebar-nav a:hover {
+      background: var(--accent);
+      color: var(--fg);
+    }
+
+    .sidebar-nav a.active {
+      background: var(--primary-10);
+      color: var(--primary);
+    }
+
+    .sidebar-nav .badge {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--primary-10);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 100px;
+    }
+
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-footer a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted-fg);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .sidebar-footer a:hover {
+      background: var(--accent);
+      color: var(--fg);
+    }
+
+    /* ── Main Area ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted-fg);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .stat-dot.total { background: var(--muted-fg); }
+    .stat-dot.productive { background: var(--productive); }
+    .stat-dot.unproductive { background: var(--unproductive); }
+    .stat-dot.confidence { background: var(--primary); }
+
+    /* ── Content Area ── */
+    .content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Email List ── */
+    .email-list {
+      width: 380px;
+      border-right: 1px solid var(--border);
+      background: hsla(0, 0%, 100%, 0.5);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .email-list-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .email-list-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .email-list-header p {
+      font-size: 12px;
+      color: var(--muted-fg);
+      margin-top: 2px;
+    }
+
+    .email-list-items {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .email-item {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 2px solid transparent;
+    }
+
+    .email-item:hover {
+      background: hsla(220, 15%, 92%, 0.5);
+    }
+
+    .email-item.selected {
+      background: var(--primary-5);
+      border-left-color: var(--primary);
+    }
+
+    .email-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .email-item-from {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .email-item-date {
+      font-size: 11px;
+      color: var(--muted-fg);
+    }
+
+    .email-item-subject {
+      font-size: 13px;
+      font-weight: 500;
+      color: hsla(220, 25%, 10%, 0.8);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .email-item-preview {
+      font-size: 12px;
+      color: var(--muted-fg);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .email-item-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* ── Badges ── */
+    .badge-classification {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 100px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-productive {
+      background: var(--productive-light);
+      color: var(--productive-text);
+    }
+
+    .badge-unproductive {
+      background: var(--unproductive-light);
+      color: var(--unproductive-text);
+    }
+
+    .confidence-text {
+      font-size: 11px;
+      color: var(--muted-fg);
+    }
+
+    /* ── Email Detail ── */
+    .email-detail {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .email-detail-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .email-detail-empty-inner {
+      text-align: center;
+    }
+
+    .email-detail-empty-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+      color: var(--muted-fg);
+    }
+
+    .email-detail-empty h3 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .email-detail-empty p {
+      font-size: 12px;
+      color: var(--muted-fg);
+      margin-top: 4px;
+    }
+
+    .email-detail-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .email-detail-subject {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .email-detail-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .email-detail-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary-10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .email-detail-sender-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .email-detail-sender-email {
+      font-size: 12px;
+      color: var(--muted-fg);
+    }
+
+    .email-detail-date {
+      font-size: 12px;
+      color: var(--muted-fg);
+    }
+
+    .email-detail-body-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Classification Card ── */
+    .classification-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: var(--card);
+    }
+
+    .classification-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+
+    .classification-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .classification-grid-item label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted-fg);
+      margin-bottom: 6px;
+    }
+
+    .classification-grid-item .value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .confidence-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--muted);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .confidence-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.5s ease;
+    }
+
+    .confidence-bar-fill.productive { background: var(--productive); }
+    .confidence-bar-fill.unproductive { background: var(--unproductive); }
+
+    .confidence-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .confidence-row .confidence-bar-track {
+      flex: 1;
+    }
+
+    .confidence-row span {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ── Sections ── */
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .email-body-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: var(--card);
+      font-size: 14px;
+      line-height: 1.7;
+      color: hsla(220, 25%, 10%, 0.8);
+      white-space: pre-line;
+    }
+
+    /* ── Suggested Reply ── */
+    .reply-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .reply-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .reply-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted-fg);
+    }
+
+    .btn-ghost:hover {
+      background: var(--accent);
+      color: var(--fg);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-fg);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .reply-card {
+      border: 2px dashed hsla(220, 70%, 50%, 0.2);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: var(--primary-5);
+      font-size: 14px;
+      line-height: 1.7;
+      color: hsla(220, 25%, 10%, 0.8);
+      white-space: pre-line;
+    }
+
+    /* ── SVG Icons (inline) ── */
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .icon-sm {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* ── Upload Section ── */
+    .upload-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .upload-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upload-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      background: var(--muted);
+      border-radius: 10px;
+      padding: 3px;
+    }
+
+    .upload-tab {
+      flex: 1;
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted-fg);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .upload-tab.active {
+      background: var(--card);
+      color: var(--fg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .upload-tab:hover:not(.active) {
+      color: var(--fg);
+    }
+
+    .upload-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      background: var(--bg);
+      color: var(--fg);
+      transition: border-color 0.15s;
+    }
+
+    .upload-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .upload-textarea::placeholder {
+      color: var(--muted-fg);
+    }
+
+    .upload-dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--bg);
+    }
+
+    .upload-dropzone:hover,
+    .upload-dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-5);
+    }
+
+    .upload-dropzone-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .upload-dropzone-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--fg);
+    }
+
+    .upload-dropzone-hint {
+      font-size: 12px;
+      color: var(--muted-fg);
+      margin-top: 4px;
+    }
+
+    .upload-file-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--primary-5);
+      border: 1px solid hsla(220, 70%, 50%, 0.2);
+      border-radius: var(--radius);
+      margin-top: 10px;
+    }
+
+    .upload-file-info .file-icon {
+      font-size: 20px;
+    }
+
+    .upload-file-info .file-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .upload-file-info .file-remove {
+      background: none;
+      border: none;
+      color: var(--muted-fg);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+
+    .upload-file-info .file-remove:hover {
+      background: hsla(0, 70%, 50%, 0.1);
+      color: hsl(0, 70%, 50%);
+    }
+
+    .upload-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .btn-process {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      background: var(--primary);
+      color: var(--primary-fg);
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-process:hover {
+      opacity: 0.9;
+    }
+
+    .btn-process:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--card);
+      color: var(--muted-fg);
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-clear:hover {
+      background: var(--accent);
+      color: var(--fg);
+    }
+
+    /* ── Result Card ── */
+    .upload-result {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      overflow: hidden;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .upload-result-header {
+      padding: 14px 16px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .upload-result-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .upload-result-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .upload-result-item label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted-fg);
+      margin-bottom: 6px;
+    }
+
+    .upload-result-item .value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .upload-result-reply {
+      border: 2px dashed hsla(220, 70%, 50%, 0.2);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: var(--primary-5);
+      font-size: 14px;
+      line-height: 1.7;
+      color: hsla(220, 25%, 10%, 0.8);
+      white-space: pre-line;
+    }
+
+    .upload-result-reply-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .upload-result-reply-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Utility ── */
+    .hidden { display: none !important; }
+
+    /* ── Animation ── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    /* ── Scrollbar ── */
+    .email-list-items::-webkit-scrollbar,
+    .email-detail-body-area::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .email-list-items::-webkit-scrollbar-track,
+    .email-detail-body-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .email-list-items::-webkit-scrollbar-thumb,
+    .email-detail-body-area::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">✦</div>
+        <div>
+          <h1>MailClassify</h1>
+          <p>Classificação com IA</p>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="active">
+          <span>📥</span>
+          <span>Caixa de Entrada</span>
+          <span class="badge">6</span>
+        </a>
+        <a href="#">
+          <span>🏷️</span>
+          <span>Classificados</span>
+        </a>
+        <a href="#">
+          <span>✉️</span>
+          <span>Respondidos</span>
+        </a>
+        <a href="#">
+          <span>📊</span>
+          <span>Estatísticas</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#">
+          <span>⚙️</span>
+          <span>Configurações</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-label"><span class="stat-dot total"></span> Total</div>
+          <div class="stat-value">6</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><span class="stat-dot productive"></span> Produtivos</div>
+          <div class="stat-value">4</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><span class="stat-dot unproductive"></span> Improdutivos</div>
+          <div class="stat-value">2</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><span class="stat-dot confidence"></span> Confiança</div>
+          <div class="stat-value">94%</div>
+        </div>
+      </div>
+
+      <!-- Upload / Input Section -->
+      <div class="upload-section" id="uploadSection">
+        <div class="upload-section-title">📤 Enviar Email para Classificação</div>
+        <div class="upload-tabs">
+          <button class="upload-tab active" onclick="switchTab('text')">✏️ Inserir Texto</button>
+          <button class="upload-tab" onclick="switchTab('file')">📎 Upload de Arquivo</button>
+        </div>
+
+        <!-- Text Tab -->
+        <div id="tabText">
+          <textarea class="upload-textarea" id="emailTextInput" placeholder="Cole ou digite o conteúdo do email aqui...&#10;&#10;Exemplo:&#10;Prezados, gostaria de solicitar suporte técnico para o módulo de relatórios..."></textarea>
+        </div>
+
+        <!-- File Tab -->
+        <div id="tabFile" style="display:none;">
+          <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-dropzone-icon">📁</div>
+            <div class="upload-dropzone-text">Arraste um arquivo ou clique para selecionar</div>
+            <div class="upload-dropzone-hint">Formatos aceitos: .txt ou .pdf (máx. 5MB)</div>
+          </div>
+          <input type="file" id="fileInput" accept=".txt,.pdf" style="display:none;" />
+          <div id="fileInfo" style="display:none;"></div>
+        </div>
+
+        <div class="upload-actions">
+          <button class="btn-process" id="btnProcess" onclick="processEmail()">✦ Classificar Email</button>
+          <button class="btn-clear" onclick="clearInput()">🗑️ Limpar</button>
+        </div>
+
+        <!-- Result -->
+        <div id="uploadResult" style="display:none;"></div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Email List -->
+        <div class="email-list">
+          <div class="email-list-header">
+            <h2>Emails Recebidos</h2>
+            <p>6 emails classificados pela IA</p>
+          </div>
+          <div class="email-list-items">
+
+            <div class="email-item selected" onclick="showEmail(0)">
+              <div class="email-item-header">
+                <span class="email-item-from">Carlos Silva</span>
+                <span class="email-item-date">Há 15 min</span>
+              </div>
+              <div class="email-item-subject">Erro no sistema de relatórios - Urgente</div>
+              <div class="email-item-preview">Estamos enfrentando um erro crítico no módulo de relatórios desde ontem...</div>
+              <div class="email-item-badges">
+                <span class="badge-classification badge-productive">✓ Produtivo</span>
+                <span class="confidence-text">96% confiança</span>
+              </div>
+            </div>
+
+            <div class="email-item" onclick="showEmail(1)">
+              <div class="email-item-header">
+                <span class="email-item-from">Ana Rodrigues</span>
+                <span class="email-item-date">Há 45 min</span>
+              </div>
+              <div class="email-item-subject">Dúvida sobre integração com API</div>
+              <div class="email-item-preview">Gostaria de saber como realizar a integração do sistema com nossa API...</div>
+              <div class="email-item-badges">
+                <span class="badge-classification badge-productive">✓ Produtivo</span>
+                <span class="confidence-text">91% confiança</span>
+              </div>
+            </div>
+
+            <div class="email-item" onclick="showEmail(2)">
+              <div class="email-item-header">
+                <span class="email-item-from">Roberto Mendes</span>
+                <span class="email-item-date">Há 1h</span>
+              </div>
+              <div class="email-item-subject">Parabéns pela conquista!</div>
+              <div class="email-item-preview">Quero parabenizar toda a equipe pelo excelente resultado no último trimestre...</div>
+              <div class="email-item-badges">
+                <span class="badge-classification badge-unproductive">⚠ Improdutivo</span>
+                <span class="confidence-text">98% confiança</span>
+              </div>
+            </div>
+
+            <div class="email-item" onclick="showEmail(3)">
+              <div class="email-item-header">
+                <span class="email-item-from">Mariana Costa</span>
+                <span class="email-item-date">Há 2h</span>
+              </div>
+              <div class="email-item-subject">Atualização do caso #4521 - Cliente Alfa</div>
+              <div class="email-item-preview">Segue atualização sobre o caso do Cliente Alfa que está em aberto desde...</div>
+              <div class="email-item-badges">
+                <span class="badge-classification badge-productive">✓ Produtivo</span>
+                <span class="confidence-text">94% confiança</span>
+              </div>
+            </div>
+
+            <div class="email-item" onclick="showEmail(4)">
+              <div class="email-item-header">
+                <span class="email-item-from">Fernanda Lima</span>
+                <span class="email-item-date">Há 3h</span>
+              </div>
+              <div class="email-item-subject">Obrigada pelo excelente atendimento!</div>
+              <div class="email-item-preview">Gostaria de agradecer ao João pelo suporte prestado ontem. Foi muito...</div>
+              <div class="email-item-badges">
+                <span class="badge-classification badge-unproductive">⚠ Improdutivo</span>
+                <span class="confidence-text">95% confiança</span>
+              </div>
+            </div>
+
+            <div class="email-item" onclick="showEmail(5)">
+              <div class="email-item-header">
+                <span class="email-item-from">Pedro Almeida</span>
+                <span class="email-item-date">Há 4h</span>
+              </div>
+              <div class="email-item-subject">Solicitação de acesso ao módulo financeiro</div>
+              <div class="email-item-preview">Preciso de acesso ao módulo financeiro para gerar os relatórios de...</div>
+              <div class="email-item-badges">
+                <span class="badge-classification badge-productive">✓ Produtivo</span>
+                <span class="confidence-text">93% confiança</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Email Detail -->
+        <div class="email-detail" id="emailDetail">
+          <!-- Empty state shown by default -->
+          <div class="email-detail-empty" id="emptyState">
+            <div class="email-detail-empty-inner">
+              <div class="email-detail-empty-icon">✦</div>
+              <h3>Selecione um email</h3>
+              <p>Escolha um email para ver a classificação e resposta sugerida</p>
+            </div>
+          </div>
+
+          <!-- Detail content (hidden by default) -->
+          <div id="detailContent" class="hidden" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+            <div class="email-detail-header">
+              <div class="email-detail-subject" id="detailSubject"></div>
+              <div class="email-detail-meta">
+                <div class="email-detail-avatar" id="detailAvatar"></div>
+                <div>
+                  <div class="email-detail-sender-name" id="detailName"></div>
+                  <div class="email-detail-sender-email" id="detailEmail"></div>
+                </div>
+                <span style="color:var(--muted-fg)">•</span>
+                <span class="email-detail-date" id="detailDate"></span>
+              </div>
+            </div>
+
+            <div class="email-detail-body-area">
+              <!-- Classification -->
+              <div class="classification-card animate-in">
+                <div class="classification-card-title">✦ Classificação da IA</div>
+                <div class="classification-grid">
+                  <div class="classification-grid-item">
+                    <label>Classificação</label>
+                    <div id="detailBadge"></div>
+                  </div>
+                  <div class="classification-grid-item">
+                    <label>Categoria</label>
+                    <div class="value" id="detailCategory"></div>
+                  </div>
+                  <div class="classification-grid-item">
+                    <label>Confiança</label>
+                    <div class="confidence-row">
+                      <div class="confidence-bar-track">
+                        <div class="confidence-bar-fill" id="detailConfBar"></div>
+                      </div>
+                      <span id="detailConfText"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Body -->
+              <div>
+                <div class="section-title">Conteúdo do Email</div>
+                <div class="email-body-card" id="detailBody"></div>
+              </div>
+
+              <!-- Reply -->
+              <div>
+                <div class="reply-header">
+                  <div class="reply-header-left">✦ Resposta Sugerida pela IA</div>
+                  <div class="reply-actions">
+                    <button class="btn btn-ghost" onclick="copyReply()">📋 Copiar</button>
+                    <button class="btn btn-primary">📨 Enviar Resposta</button>
+                  </div>
+                </div>
+                <div class="reply-card" id="detailReply"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var emails = [
+      {
+        from: "Carlos Silva",
+        fromEmail: "carlos.silva@empresa.com",
+        subject: "Erro no sistema de relatórios - Urgente",
+        body: "Olá equipe de suporte,\n\nEstamos enfrentando um erro crítico no módulo de relatórios desde ontem à tarde. Ao tentar gerar o relatório mensal de vendas, o sistema retorna o erro 500 e não conseguimos prosseguir.\n\nIsso está impactando diretamente nossa entrega mensal. Precisamos de uma solução urgente.\n\nAtenciosamente,\nCarlos Silva\nGerente Comercial",
+        date: "Há 15 min",
+        classification: "productive",
+        confidence: 96,
+        category: "Suporte Técnico",
+        suggestedReply: "Olá Carlos,\n\nRecebemos sua solicitação e já estamos investigando o erro no módulo de relatórios. Nossa equipe técnica foi acionada e você receberá uma atualização em até 2 horas.\n\nPedimos desculpas pelo inconveniente.\n\nAtenciosamente,\nEquipe de Suporte"
+      },
+      {
+        from: "Ana Rodrigues",
+        fromEmail: "ana.rodrigues@cliente.com.br",
+        subject: "Dúvida sobre integração com API",
+        body: "Prezados,\n\nGostaria de saber como realizar a integração do sistema com nossa API REST. Precisamos enviar dados de pedidos automaticamente e gostaríamos de entender quais endpoints estão disponíveis e qual a documentação técnica.\n\nPodem nos enviar as credenciais de acesso ao ambiente de sandbox?\n\nObrigada,\nAna Rodrigues\nAnalista de Sistemas",
+        date: "Há 45 min",
+        classification: "productive",
+        confidence: 91,
+        category: "Dúvidas Técnicas",
+        suggestedReply: "Olá Ana,\n\nObrigado pelo contato! Segue o link para nossa documentação técnica da API: [link]. As credenciais do ambiente sandbox serão enviadas separadamente por email seguro.\n\nCaso tenha dúvidas adicionais, estamos à disposição.\n\nAtenciosamente,\nEquipe Técnica"
+      },
+      {
+        from: "Roberto Mendes",
+        fromEmail: "roberto@parceiro.com",
+        subject: "Parabéns pela conquista!",
+        body: "Olá pessoal!\n\nQuero parabenizar toda a equipe pelo excelente resultado no último trimestre. O crescimento de 40% é impressionante e mostra o comprometimento de todos.\n\nContinuem com o ótimo trabalho!\n\nAbraços,\nRoberto Mendes",
+        date: "Há 1h",
+        classification: "unproductive",
+        confidence: 98,
+        category: "Felicitações",
+        suggestedReply: "Olá Roberto,\n\nMuito obrigado pelas palavras! Ficamos muito felizes com o reconhecimento. É o resultado do trabalho em equipe.\n\nUm abraço,\nEquipe"
+      },
+      {
+        from: "Mariana Costa",
+        fromEmail: "mariana.costa@empresa.com",
+        subject: "Atualização do caso #4521 - Cliente Alfa",
+        body: "Olá,\n\nSegue atualização sobre o caso do Cliente Alfa que está em aberto desde a semana passada:\n\n- O problema de sincronização foi identificado\n- A correção está em fase de testes\n- Previsão de deploy: amanhã às 10h\n\nPreciso de aprovação para realizar o deploy em produção.\n\nMariana Costa\nAnalista de Suporte N2",
+        date: "Há 2h",
+        classification: "productive",
+        confidence: 94,
+        category: "Casos em Aberto",
+        suggestedReply: "Olá Mariana,\n\nObrigado pela atualização. O deploy está aprovado para amanhã às 10h conforme previsto. Por favor, notifique o Cliente Alfa sobre a previsão de resolução.\n\nAtenciosamente,\nCoordenação de Suporte"
+      },
+      {
+        from: "Fernanda Lima",
+        fromEmail: "fernanda@newsletter.com",
+        subject: "Obrigada pelo excelente atendimento!",
+        body: "Olá equipe,\n\nGostaria de agradecer ao João pelo suporte prestado ontem. Foi muito atencioso e resolveu meu problema rapidamente.\n\nVocês são incríveis!\n\nFernanda Lima",
+        date: "Há 3h",
+        classification: "unproductive",
+        confidence: 95,
+        category: "Agradecimentos",
+        suggestedReply: "Olá Fernanda,\n\nMuito obrigado pelo feedback! Ficamos felizes em saber que o atendimento foi satisfatório. Encaminharemos seu elogio ao João.\n\nEstamos sempre à disposição!\n\nAtenciosamente,\nEquipe de Suporte"
+      },
+      {
+        from: "Pedro Almeida",
+        fromEmail: "pedro.almeida@tech.io",
+        subject: "Solicitação de acesso ao módulo financeiro",
+        body: "Prezados,\n\nPreciso de acesso ao módulo financeiro para gerar os relatórios de fechamento do mês. Meu perfil atual não tem as permissões necessárias.\n\nUsuário: pedro.almeida\nMódulo: Financeiro > Relatórios\nNível: Leitura\n\nAguardo retorno.\n\nPedro Almeida\nController Financeiro",
+        date: "Há 4h",
+        classification: "productive",
+        confidence: 93,
+        category: "Solicitação de Acesso",
+        suggestedReply: "Olá Pedro,\n\nSua solicitação de acesso foi recebida. Estamos processando a liberação das permissões para o módulo Financeiro > Relatórios com nível de Leitura.\n\nPrazo estimado: até 4 horas úteis.\n\nAtenciosamente,\nEquipe de Administração"
+      }
+    ];
+
+    var currentReply = "";
+
+    function showEmail(index) {
+      var e = emails[index];
+      currentReply = e.suggestedReply;
+
+      // Update list selection
+      var items = document.querySelectorAll('.email-item');
+      items.forEach(function(item) { item.classList.remove('selected'); });
+      items[index].classList.add('selected');
+
+      // Show detail
+      document.getElementById('emptyState').style.display = 'none';
+      var dc = document.getElementById('detailContent');
+      dc.style.display = 'flex';
+      dc.classList.remove('hidden');
+
+      document.getElementById('detailSubject').textContent = e.subject;
+      document.getElementById('detailAvatar').textContent = e.from.charAt(0);
+      document.getElementById('detailName').textContent = e.from;
+      document.getElementById('detailEmail').textContent = e.fromEmail;
+      document.getElementById('detailDate').textContent = e.date;
+      document.getElementById('detailCategory').textContent = e.category;
+      document.getElementById('detailBody').textContent = e.body;
+      document.getElementById('detailReply').textContent = e.suggestedReply;
+
+      // Badge
+      var badgeEl = document.getElementById('detailBadge');
+      if (e.classification === 'productive') {
+        badgeEl.innerHTML = '<span class="badge-classification badge-productive">✓ Produtivo</span>';
+      } else {
+        badgeEl.innerHTML = '<span class="badge-classification badge-unproductive">⚠ Improdutivo</span>';
+      }
+
+      // Confidence bar
+      var bar = document.getElementById('detailConfBar');
+      bar.style.width = e.confidence + '%';
+      bar.className = 'confidence-bar-fill ' + e.classification.replace('un','un');
+      if (e.classification === 'productive') {
+        bar.className = 'confidence-bar-fill productive';
+      } else {
+        bar.className = 'confidence-bar-fill unproductive';
+      }
+      document.getElementById('detailConfText').textContent = e.confidence + '%';
+    }
+
+    function copyReply() {
+      if (navigator.clipboard && currentReply) {
+        navigator.clipboard.writeText(currentReply);
+      }
+    }
+
+    /* ── Upload / Input Logic ── */
+    var uploadedFile = null;
+
+    function switchTab(tab) {
+      var tabs = document.querySelectorAll('.upload-tab');
+      tabs[0].classList.toggle('active', tab === 'text');
+      tabs[1].classList.toggle('active', tab === 'file');
+      document.getElementById('tabText').style.display = tab === 'text' ? '' : 'none';
+      document.getElementById('tabFile').style.display = tab === 'file' ? '' : 'none';
+    }
+
+    // File input
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      handleFile(e.target.files[0]);
+    });
+
+    // Drag & drop
+    var dropzone = document.getElementById('dropzone');
+    dropzone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', function() {
+      dropzone.classList.remove('dragover');
+    });
+    dropzone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    function handleFile(file) {
+      if (!file) return;
+      var ext = file.name.split('.').pop().toLowerCase();
+      if (ext !== 'txt' && ext !== 'pdf') {
+        alert('Formato não suportado. Use arquivos .txt ou .pdf');
+        return;
+      }
+      uploadedFile = file;
+      var info = document.getElementById('fileInfo');
+      info.style.display = '';
+      info.innerHTML = '<div class="upload-file-info">' +
+        '<span class="file-icon">' + (ext === 'pdf' ? '📄' : '📝') + '</span>' +
+        '<span class="file-name">' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)</span>' +
+        '<button class="file-remove" onclick="removeFile()">✕</button>' +
+        '</div>';
+    }
+
+    function removeFile() {
+      uploadedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileInfo').style.display = 'none';
+      document.getElementById('fileInfo').innerHTML = '';
+    }
+
+    function clearInput() {
+      document.getElementById('emailTextInput').value = '';
+      removeFile();
+      document.getElementById('uploadResult').style.display = 'none';
+    }
+
+    function processEmail() {
+      var textTab = document.getElementById('tabText').style.display !== 'none';
+      var content = '';
+
+      if (textTab) {
+        content = document.getElementById('emailTextInput').value.trim();
+        if (!content) { alert('Por favor, insira o conteúdo do email.'); return; }
+        classifyAndShow(content);
+      } else {
+        if (!uploadedFile) { alert('Por favor, selecione um arquivo.'); return; }
+        var ext = uploadedFile.name.split('.').pop().toLowerCase();
+        if (ext === 'txt') {
+          var reader = new FileReader();
+          reader.onload = function(e) { classifyAndShow(e.target.result); };
+          reader.readAsText(uploadedFile);
+        } else {
+          // PDF: read as text (simplified demo)
+          classifyAndShow('[Conteúdo extraído do arquivo: ' + uploadedFile.name + ']\n\nO conteúdo do PDF seria processado por um serviço de extração de texto em um ambiente de produção.');
+        }
+      }
+    }
+
+    function classifyAndShow(text) {
+      // Simple keyword-based classification (demo)
+      var lowerText = text.toLowerCase();
+      var productiveKeywords = ['erro', 'urgente', 'problema', 'suporte', 'solicitação', 'solicito',
+        'acesso', 'dúvida', 'integração', 'atualização', 'prazo', 'deploy', 'correção',
+        'ajuda', 'preciso', 'necessário', 'bug', 'falha', 'relatório', 'permissão'];
+      var unproductiveKeywords = ['parabéns', 'obrigado', 'obrigada', 'agradecimento', 'felicitações',
+        'excelente trabalho', 'ótimo', 'incrível', 'feliz', 'abraço', 'sucesso'];
+
+      var pScore = 0, uScore = 0;
+      productiveKeywords.forEach(function(k) { if (lowerText.indexOf(k) !== -1) pScore++; });
+      unproductiveKeywords.forEach(function(k) { if (lowerText.indexOf(k) !== -1) uScore++; });
+
+      var isProductive = pScore >= uScore;
+      if (pScore === 0 && uScore === 0) isProductive = true; // default
+
+      var confidence = Math.min(98, 75 + Math.abs(pScore - uScore) * 5 + Math.floor(Math.random() * 8));
+      var category = isProductive ? 'Ação Necessária' : 'Informativo';
+
+      var reply = isProductive
+        ? 'Prezado(a),\n\nRecebemos sua mensagem e já estamos analisando sua solicitação. Nossa equipe entrará em contato em breve com uma solução.\n\nAtenciosamente,\nEquipe de Suporte'
+        : 'Prezado(a),\n\nMuito obrigado pela sua mensagem! Ficamos felizes com seu contato.\n\nAtenciosamente,\nEquipe';
+
+      showResult(isProductive, confidence, category, reply, text);
+    }
+
+    function showResult(isProductive, confidence, category, reply, originalText) {
+      var cls = isProductive ? 'productive' : 'unproductive';
+      var label = isProductive ? '✓ Produtivo' : '⚠ Improdutivo';
+      var badgeClass = isProductive ? 'badge-productive' : 'badge-unproductive';
+
+      var html = '<div class="upload-result">' +
+        '<div class="upload-result-header">✦ Resultado da Classificação</div>' +
+        '<div class="upload-result-body">' +
+          '<div class="upload-result-row">' +
+            '<div class="upload-result-item"><label>Classificação</label><span class="badge-classification ' + badgeClass + '">' + label + '</span></div>' +
+            '<div class="upload-result-item"><label>Categoria</label><div class="value">' + category + '</div></div>' +
+            '<div class="upload-result-item"><label>Confiança</label>' +
+              '<div class="confidence-row"><div class="confidence-bar-track"><div class="confidence-bar-fill ' + cls + '" style="width:' + confidence + '%"></div></div><span style="font-size:14px;font-weight:600;">' + confidence + '%</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="upload-result-reply-header">' +
+              '<div class="upload-result-reply-title">✦ Resposta Sugerida pela IA</div>' +
+              '<button class="btn btn-ghost" onclick="copyResultReply()">📋 Copiar</button>' +
+            '</div>' +
+            '<div class="upload-result-reply" id="resultReplyText" style="margin-top:8px;">' + reply.replace(/\n/g, '<br>') + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+      var el = document.getElementById('uploadResult');
+      el.innerHTML = html;
+      el.style.display = '';
+      currentResultReply = reply;
+    }
+
+    var currentResultReply = '';
+    function copyResultReply() {
+      if (navigator.clipboard && currentResultReply) {
+        navigator.clipboard.writeText(currentResultReply);
+      }
+    }
+
+    // Show first email by default
+    showEmail(0);
+  </script>
+</body>
+</html>
