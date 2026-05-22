@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import install1a from "@/assets/install-1a.jpg";
-import install1b from "@/assets/install-1b.jpg";
-import install1c from "@/assets/install-1c.jpg";
+
+import install1a from "@/assets/installs/install-1a.jpeg";
+import install1b from "@/assets/installs/install-1b.jpeg";
+import install1c from "@/assets/installs/install-1c.jpeg";
 import install2a from "@/assets/install-2a.jpg";
 import install2b from "@/assets/install-2b.jpg";
 import install3a from "@/assets/install-3a.jpg";
@@ -19,19 +20,22 @@ const installations: Installation[] = [
   {
     title: "Residência Família Souza",
     location: "São Paulo, SP",
-    description: "Sistema de 8 kWp instalado em telhado residencial, gerando economia de 92% na conta de energia.",
+    description:
+      "Sistema de 8 kWp instalado em telhado residencial, gerando economia de 92% na conta de energia.",
     images: [install1a, install1b, install1c],
   },
   {
     title: "Galpão Industrial Vertex",
     location: "Campinas, SP",
-    description: "Instalação comercial de 120 kWp em telhado industrial, com retorno do investimento em 3,5 anos.",
+    description:
+      "Instalação comercial de 120 kWp em telhado industrial, com retorno do investimento em 3,5 anos.",
     images: [install2a, install2b],
   },
   {
     title: "Fazenda Boa Vista",
     location: "Ribeirão Preto, SP",
-    description: "Usina solar de solo com 50 kWp para alimentar toda a operação rural da propriedade.",
+    description:
+      "Usina solar de solo com 50 kWp para alimentar toda a operação rural da propriedade.",
     images: [install3a, install3b],
   },
 ];
@@ -84,7 +88,8 @@ const Installations = () => {
             Instalações realizadas
           </h2>
           <p className="text-muted-foreground text-lg">
-            Conheça alguns projetos entregues pela Imara Solar para nossos clientes.
+            Conheça alguns projetos entregues pela Imara Solar para nossos
+            clientes.
           </p>
         </div>
 
@@ -106,9 +111,15 @@ const Installations = () => {
                 />
               </div>
               <div className="p-6">
-                <p className="text-sm text-accent font-semibold mb-1">{inst.location}</p>
-                <h3 className="font-heading text-xl font-bold mb-2">{inst.title}</h3>
-                <p className="text-muted-foreground text-sm line-clamp-2">{inst.description}</p>
+                <p className="text-sm text-coral font-semibold mb-1">
+                  {inst.location}
+                </p>
+                <h3 className="font-heading text-xl font-bold mb-2">
+                  {inst.title}
+                </h3>
+                <p className="text-muted-foreground text-sm line-clamp-2">
+                  {inst.description}
+                </p>
               </div>
             </button>
           ))}
@@ -176,8 +187,12 @@ const Installations = () => {
             </div>
 
             <div className="p-6">
-              <p className="text-sm text-accent font-semibold mb-1">{current.location}</p>
-              <h3 className="font-heading text-2xl font-bold mb-2">{current.title}</h3>
+              <p className="text-sm text-accent font-semibold mb-1">
+                {current.location}
+              </p>
+              <h3 className="font-heading text-2xl font-bold mb-2">
+                {current.title}
+              </h3>
               <p className="text-muted-foreground">{current.description}</p>
             </div>
           </div>

@@ -61,7 +61,7 @@ const Testimonials = () => {
             Depoimentos
           </span>
           <h2 className="font-heading text-4xl md:text-5xl font-bold mt-3 mb-4 text-primary-foreground">
-            O que nossos <span className="text-accent">clientes</span> dizem
+            O que nossos <span className="text-coral">clientes</span> dizem
           </h2>
           <p className="text-muted-foreground text-lg">
             Histórias reais de quem já transformou o sol em economia com a Imara

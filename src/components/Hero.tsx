@@ -1,5 +1,12 @@
 import heroImg from "@/assets/hero-solar.jpg";
 import badgeLogo from "@/assets/imara-logo-x.png";
+import { Home, Percent, ShieldCheck, LeafIcon } from "lucide-react";
+
+const heroStats = [
+  { val: "500+", label: "Instalações", icon: Home },
+  { val: "95%", label: "Economia", icon: LeafIcon },
+  { val: "25 anos", label: "Garantia", icon: ShieldCheck },
+] as const;
 
 const Hero = () => {
   return (
@@ -28,7 +35,7 @@ const Hero = () => {
           </span>
           <h1 className="font-heading text-4xl md:text-6xl font-900 text-primary-foreground leading-tight mb-6">
             Transforme o sol em{" "}
-            <span className="text-accent">economia real</span> para sua casa
+            <span className="text-coral">economia real</span> para sua casa
           </h1>
           <p className="text-primary-foreground/80 text-lg md:text-xl mb-8 leading-relaxed max-w-xl">
             A Imara Solar projeta e instala sistemas fotovoltaicos de alta
@@ -37,10 +44,10 @@ const Hero = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <a
-              href="#contato"
-              className="bg-accent text-accent-foreground px-8 py-4 rounded-full text-base font-bold hover:brightness-110 transition text-center"
+              href="https://imarasolar.com.br/calculadora/"
+              className="bg-coral text-accent-foreground px-8 py-4 rounded-full text-base font-bold hover:brightness-110 transition text-center"
             >
-              Simule Sua Economia
+              Calcule sua economia
             </a>
             <a
               href="#como-funciona"
@@ -49,18 +56,19 @@ const Hero = () => {
               Como Funciona
             </a>
           </div>
-          <div className="flex gap-8 mt-12">
-            {[
-              ["500+", "Instalações"],
-              ["95%", "Economia"],
-              ["25 anos", "Garantia"],
-            ].map(([val, label]) => (
-              <div key={label} className="text-center">
-                <div className="font-heading text-2xl md:text-3xl font-bold text-accent">
+          <div className="flex flex-wrap gap-4 md:gap-8 mt-12">
+            {heroStats.map(({ val, label, icon: Icon }) => (
+              <div
+                key={label}
+                className="w-[calc(30%-0.1rem)] md:w-auto text-left"
+              >
+                <div className="font-heading text-2xl md:text-3xl font-bold text-coral">
                   {val}
                 </div>
-                <div className="text-primary-foreground/70 text-sm">
-                  {label}
+
+                <div className="mt-1 flex items-center gap-2 text-primary-foreground/70 text-sm">
+                  <Icon className="h-4 w-4 shrink-0 text-coral" aria-hidden />
+                  <span>{label}</span>
                 </div>
               </div>
             ))}

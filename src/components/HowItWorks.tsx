@@ -30,7 +30,7 @@ const HowItWorks = () => {
             Passo a Passo
           </span>
           <h2 className="font-heading text-3xl md:text-5xl font-bold text-foreground mt-3">
-            Como funciona a <span className="text-accent">instalação</span>
+            Como funciona a <span className="text-coral">instalação</span>
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -40,7 +40,7 @@ const HowItWorks = () => {
                 <div className="hidden lg:block absolute top-10 left-[60%] w-full h-[2px] bg-border" />
               )}
               <div className="relative bg-card rounded-2xl border p-8 text-center hover:shadow-lg transition">
-                <div className="font-heading text-5xl font-900 text-accent/20 mb-4">
+                <div className="font-heading text-5xl font-900 text-coral mb-4">
                   {s.num}
                 </div>
                 <h3 className="font-heading text-lg font-bold text-foreground mb-2">

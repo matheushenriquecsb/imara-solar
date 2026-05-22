@@ -56,7 +56,7 @@ const Footer = () => {
             </h4>
             <div className="space-y-2 text-primary-foreground/60 text-sm">
               {[
-                { icon: Phone, text: "(71) 99157-3157" },
+                { icon: Phone, text: "(71) 99157-3307" },
                 { icon: Mail, text: "ivan@imarasolar.com.br" },
                 { icon: Instagram, text: "Instagram", href: INSTAGRAM_URL },
                 { icon: MapPin, text: "Salvador - BA" },

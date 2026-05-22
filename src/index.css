@@ -50,6 +50,10 @@
     --brand-yellow: 55 100% 60%;
     --brand-orange: 30 95% 55%;
     --brand-pink: 325 90% 50%;
+
+    /* #ffa049 — fundos de botões e seções */
+    --coral: 29 100% 64%;
+    --coral-foreground: 150 40% 12%;
     --gradient-brand: linear-gradient(
       90deg,
       hsl(var(--brand-yellow)),
